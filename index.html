@@ -1,123 +1,114 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Predictor - Win/Loss Tracker</title>
-    <style>
-        :root { --bg: #09090b; --card: #18181b; --primary: #3b82f6; --text: #fafafa; --win: #22c55e; --loss: #ef4444; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { width: 95%; max-width: 400px; background: var(--card); padding: 25px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #27272a; text-align: center; }
-        .header { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: #71717a; margin-bottom: 15px; }
-        .status-badge { font-size: 12px; padding: 5px 15px; border-radius: 50px; font-weight: bold; margin-bottom: 10px; display: inline-block; }
-        .win-bg { background: rgba(34, 197, 94, 0.2); color: var(--win); border: 1px solid var(--win); }
-        .loss-bg { background: rgba(239, 68, 68, 0.2); color: var(--loss); border: 1px solid var(--loss); }
-        .result-box { margin: 25px 0; padding: 20px; background: #27272a; border-radius: 15px; }
-        .predict-val { font-size: 55px; font-weight: 900; line-height: 1; }
-        .predict-color { font-size: 16px; font-weight: bold; text-transform: uppercase; margin-top: 5px; }
-        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .stat-card { background: #1c1c1f; padding: 10px; border-radius: 12px; }
-        .stat-v { display: block; font-size: 18px; font-weight: bold; }
-        .stat-l { font-size: 11px; color: #71717a; }
-        .green { color: var(--win); } .red { color: var(--loss); } .violet { color: #a855f7; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>◈•° 𝑲𝒊𝒏𝒈 𝑺𝒐𝒊𝒌𝒂𝒕 𝑩𝒂𝒉𝒊 𝑽𝑰𝑷 °•◈</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #00ffea; --bg: #050505; --card: #121212; --win: #00ff88; --loss: #ff4444; }
+    body { font-family: 'Outfit', sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
+    
+    #loginSection { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .login-card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--primary); text-align: center; width: 85%; max-width: 350px; }
+    input { width: 100%; padding: 12px; margin: 15px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: #fff; text-align: center; box-sizing: border-box; outline: none; }
+    .login-btn { width: 100%; padding: 12px; background: var(--primary); color: #000; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; }
+
+    #mainApp { display: none; width: 100%; max-width: 500px; }
+    .header { text-align: center; color: var(--primary); font-size: 18px; margin: 15px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; }
+    
+    .card { background: var(--card); border-radius: 15px; padding: 20px; border: 1px solid #222; box-shadow: 0 0 20px rgba(0,255,234,0.1); margin-bottom: 20px; }
+    .prediction-box { font-size: 45px; font-weight: bold; text-align: center; margin: 10px 0; color: var(--primary); text-shadow: 0 0 15px var(--primary); }
+    
+    .status-bar { display: flex; justify-content: space-between; font-size: 12px; margin-top: 10px; color: #888; }
+    .highlight { color: var(--primary); font-weight: bold; }
+
+    .table-container { background: #0a0a0a; border-radius: 12px; overflow: hidden; border: 1px solid #222; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { padding: 12px; background: #151515; color: var(--primary); border-bottom: 2px solid #222; }
+    td { padding: 12px; text-align: center; border-bottom: 1px solid #111; }
+    
+    .red { color: var(--loss); font-weight: bold; } 
+    .green { color: var(--win); font-weight: bold; }
+    .gold { color: #ffd700; }
+    
+    .footer { font-size: 10px; text-align: center; margin-top: 20px; color: #555; letter-spacing: 1px; }
+  </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">AI Market Intelligence</div>
-    
-    <div id="win-loss-status" class="status-badge" style="display:none;">বিশ্লেষণ চলছে...</div>
+  <div id="loginSection">
+    <div class="login-card">
+      <h2 style="color:var(--primary); margin:0;">VIP ACCESS</h2>
+      <p style="font-size:12px; color:#888;">92K NODE REAL-TIME SCANNER (1 MIN)</p>
+      <input type="password" id="passInput" placeholder="Enter VIP Key">
+      <button onclick="checkLogin()" class="login-btn">INJECT & START</button>
+      <p id="error" style="color:var(--loss); display:none; font-size:12px; margin-top:10px;">Access Denied!</p>
+    </div>
+  </div>
 
-    <div class="result-box">
-        <div class="stat-l">পরবর্তী টার্গেট (Next Prediction)</div>
-        <div id="p-num" class="predict-val">--</div>
-        <div id="p-col" class="predict-color">অপেক্ষা করুন</div>
+  <div id="mainApp">
+    <div class="header">◈•° 𝑲𝒊𝒏𝒈 𝑺𝒐𝒊𝒌𝒂𝒕 𝑩𝒂𝒉𝒊 𝑽𝑰𝑷 °•◈</div>
+
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; font-size: 14px;">
+        <span>Next Period: <b id="periodDisplay" class="highlight">----</b></span>
+        <span>Refresh: <b id="timer" style="color:#fff;">60s</b></span>
+      </div>
+      <div id="prediction" class="prediction-box">SCANNING</div>
+      <div class="status-bar">
+        <span>Accuracy: <span id="confPercent" class="highlight">0%</span></span>
+        <span>Patterns: <span id="matchFound" class="highlight">0</span></span>
+      </div>
     </div>
 
-    <div class="stats">
-        <div class="stat-card"><span class="stat-v" id="last-result">--</span><span class="stat-l">আগের ফলাফল</span></div>
-        <div class="stat-card"><span class="stat-v" id="p-acc">0%</span><span class="stat-l">নিশ্চয়তা</span></div>
-        <div class="stat-card"><span class="stat-v" id="p-match">0</span><span class="stat-l">ইতিহাসে মিল</span></div>
-        <div class="stat-card"><span class="stat-v" id="sync-issue">--</span><span class="stat-l">বর্তমান ইস্যু</span></div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr><th>Period</th><th>Num</th><th>Size</th><th>Result</th></tr>
+        </thead>
+        <tbody id="logTable"></tbody>
+      </table>
     </div>
 
-    <div style="margin-top:20px; font-size:10px; color:#52525b;" id="time-sync">Syncing with data.json...</div>
-</div>
+    <div class="footer">
+      SCANNING INTERVAL: 1 MINUTE | DATA DEPTH: 92,000<br>
+      Developed by: ◈•° 𝑲𝒊𝒏𝒈 𝑺𝒐𝒊𝒌𝒂𝒕 𝑩𝒂𝒉𝒊 °•◈
+    </div>
+  </div>
 
 <script>
-    let lastStoredPrediction = null; // আগের প্রেডিকশন মনে রাখার জন্য
+const PASS = "Soikat2580";
+// 1-Minute API URL updated
+const LIVE_API = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json";
 
-    async function runEngine() {
-        try {
-            const response = await fetch('data.json?t=' + Date.now());
-            const data = await response.json();
-            
-            if (data.length < 11) return;
+let bigDatabase = []; 
+let lastPrediction = null;
+let lastTargetPeriod = null;
+let winLossHistory = {}; 
 
-            const latestEntry = data[data.length - 1];
-            const lookback = 10;
-            const currentPattern = data.slice(-lookback);
+async function checkLogin() {
+  const pass = document.getElementById('passInput').value;
+  if(pass === PASS) {
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    
+    try {
+      const res = await fetch('data.json');
+      const data = await res.json();
+      bigDatabase = data.list || data;
+    } catch (e) { console.error("Database error"); }
 
-            // --- Win/Loss Logic ---
-            if (lastStoredPrediction) {
-                const statusElement = document.getElementById('win-loss-status');
-                statusElement.style.display = 'inline-block';
-                
-                // আগের প্রেডিকশনের সাথে বর্তমান অরিজিনাল রেজাল্ট মিলানো হচ্ছে
-                if (latestEntry.number == lastStoredPrediction.number) {
-                    statusElement.innerText = "🔥 WIN - চমৎকার প্রেডিকশন!";
-                    statusElement.className = "status-badge win-bg";
-                } else {
-                    statusElement.innerText = "❌ LOSS - প্যাটার্ন পরিবর্তন হয়েছে";
-                    statusElement.className = "status-badge loss-bg";
-                }
-                document.getElementById('last-result').innerText = latestEntry.color + " (" + latestEntry.number + ")";
-            }
+    startEngine();
+  } else {
+    document.getElementById('error').style.display = 'block';
+  }
+}
 
-            // --- Next Prediction Engine ---
-            let matches = [];
-            for (let i = 0; i < data.length - lookback - 1; i++) {
-                let match = true;
-                for (let j = 0; j < lookback; j++) {
-                    if (data[i+j].number !== currentPattern[j].number || 
-                        data[i+j].color !== currentPattern[j].color) {
-                        match = false; break;
-                    }
-                }
-                if (match) matches.push(data[i + lookback]);
-            }
-
-            if (matches.length > 0) {
-                const counts = matches.reduce((acc, curr) => {
-                    const key = `${curr.color}|${curr.number}`;
-                    acc[key] = (acc[key] || 0) + 1;
-                    return acc;
-                }, {});
-
-                const top = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
-                const [color, number] = top.split('|');
-
-                // UI আপডেট
-                document.getElementById('p-num').innerText = number;
-                document.getElementById('p-num').className = "predict-val " + color.toLowerCase();
-                document.getElementById('p-col').innerText = color;
-                document.getElementById('p-acc').innerText = ((counts[top]/matches.length)*100).toFixed(1) + "%";
-                document.getElementById('p-match').innerText = matches.length;
-                document.getElementById('sync-issue').innerText = latestEntry.issueNumber.toString().slice(-4);
-
-                // নতুন প্রেডিকশনটি সেভ করে রাখা হচ্ছে পরের বার চেক করার জন্য
-                lastStoredPrediction = { number: number, color: color };
-            }
-
-            document.getElementById('time-sync').innerText = "Last Sync: " + new Date().toLocaleTimeString();
-
-        } catch (e) { console.log("Updating data..."); }
-    }
-
-    // প্রতি ১০ সেকেন্ডে চেক করবে (যাতে ডেটা আসার সাথে সাথে রেজাল্ট দিতে পারে)
-    setInterval(runEngine, 10000);
-    runEngine();
-</script>
-</body>
-</html>
+function startEngine() {
+  fetchLive();
+  // Fetch live results every 5 seconds for stability
+  setInterval(fetchLive, 5000);
+  
+  // Update prediction UI
+    
