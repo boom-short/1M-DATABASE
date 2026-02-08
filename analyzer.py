@@ -1,63 +1,79 @@
 import json
+import time
 from collections import Counter
 
-def complex_analysis(file_path, output_file='result.json'):
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-    except Exception as e:
-        print(f"Error: {e}")
-        return
-
-    # ১০টি ডেটার প্যাটার্ন চেক করার জন্য সেটআপ
-    lookback = 10 
-    if len(data) < lookback + 1:
-        return
-
-    # বর্তমানের শেষ ১০টি মার্কেটের অবস্থা
-    current_trend = data[-lookback:]
+def perform_deep_analysis(data, lookback=10):
+    # শেষ ১০টি ডাটা প্যাটার্ন হিসেবে নেওয়া
+    current_pattern = data[-lookback:]
+    last_issue = current_pattern[-1]['issueNumber']
+    
+    print(f"নতুন ডেটা সনাক্ত হয়েছে! ইস্যু নম্বর: {last_issue}")
     
     matches = []
-
-    # গভীর স্ক্যানিং (Number, Color, Premium/Issue গুরুত্ব সহকারে)
+    
+    # ৯০০০০ ডেটার মধ্যে ১০টি সিকোয়েন্সের গভীর অনুসন্ধান
+    # এখানে Number, Color এবং Premium সবগুলোকে সমান গুরুত্ব দেওয়া হয়েছে
     for i in range(len(data) - lookback - 1):
-        is_match = True
+        match_found = True
         for j in range(lookback):
-            # প্রতিটি পয়েন্ট চেক করা হচ্ছে
-            if (data[i+j]['number'] != current_trend[j]['number'] or 
-                data[i+j]['color'] != current_trend[j]['color']):
-                is_match = False
+            if (data[i+j]['number'] != current_pattern[j]['number'] or 
+                data[i+j]['color'] != current_pattern[j]['color'] or
+                data[i+j]['premium'] != current_pattern[j]['premium']):
+                match_found = False
                 break
         
-        if is_match:
-            # ১০টি প্যাটার্ন মিলে গেলে ১১ নম্বরটি কী ছিল তা সংগ্রহ করা
+        if match_found:
+            # ১০টি মিলে গেলে ১১ নম্বর ডেটাটি কী ছিল তা সংগ্রহ করা
             matches.append(data[i + lookback])
 
-    # ফলাফল প্রস্তুত করা
-    if matches:
-        pred_numbers = [m['number'] for m in matches]
-        pred_colors = [m['color'] for m in matches]
-        
-        best_num = Counter(pred_numbers).most_common(1)[0]
-        best_col = Counter(pred_colors).most_common(1)[0]
-        
-        result = {
-            "prediction": {
-                "number": best_num[0],
-                "color": best_col[0],
-                "confidence": f"{(best_num[1]/len(matches))*100:.2f}%",
-                "history_found": len(matches),
-                "status": "Success"
-            }
-        }
-    else:
-        result = {"prediction": {"status": "New Pattern", "msg": "ইতিহাসে এই ১০টি সিকোয়েন্সের মিল নেই।"}}
+    # ফলাফল তৈরি
+    result = {
+        "sync_issue": last_issue,
+        "prediction": "N/A",
+        "color": "N/A",
+        "confidence": "0%",
+        "history_matches": len(matches)
+    }
 
-    # এইচটিএমএল এর ব্যবহারের জন্য রেজাল্ট সেভ করা
-    with open(output_file, 'w') as f:
-        json.dump(result, f)
-    print("এনালাইসিস সম্পন্ন এবং এইচটিএমএল-কে নির্দেশ পাঠানো হয়েছে।")
+    if matches:
+        # নাম্বার এবং কালার ফ্রিকোয়েন্সি ক্যালকুলেশন
+        pred_num = Counter([m['number'] for m in matches]).most_common(1)[0]
+        pred_col = Counter([m['color'] for m in matches]).most_common(1)[0]
+        
+        result.update({
+            "prediction": pred_num[0],
+            "color": pred_col[0],
+            "confidence": f"{(pred_num[1]/len(matches))*100:.2f}%"
+        })
+
+    # এইচটিএমএল এই ফাইলটি রিড করবে
+    with open('live_result.json', 'w', encoding='utf-8') as f:
+        json.dump(result, f, indent=2)
+
+def monitor_file():
+    last_processed_issue = None
+    
+    while True:
+        try:
+            with open('data.json', 'r', encoding='utf-8') as f:
+                all_data = json.load(f)
+            
+            if not all_data:
+                continue
+
+            current_issue = all_data[-1]['issueNumber']
+
+            # যদি নতুন ইস্যু আসে, তবেই এনালাইসিস শুরু হবে
+            if current_issue != last_processed_issue:
+                perform_deep_analysis(all_data)
+                last_processed_issue = current_issue
+                
+        except Exception as e:
+            print(f"Error: {e}")
+        
+        # ফাইলটি প্রতি ২ সেকেন্ড পরপর চেক করবে নতুন ডেটা এলো কি না
+        time.sleep(2)
 
 if __name__ == "__main__":
-    complex_analysis('data.json')
-  
+    monitor_file()
+    
