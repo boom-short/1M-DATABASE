@@ -43,7 +43,7 @@
       <p style="font-size:12px; color:#888;">92K NODE REAL-TIME SCANNER (1 MIN)</p>
       <input type="password" id="passInput" placeholder="Enter VIP Key">
       <button onclick="checkLogin()" class="login-btn">INJECT & START</button>
-      <p id="error" style="color:var(--loss); display:none; font-size:12px; margin-top:10px;">Access Denied!</p>
+      <p id="error" style="color:var(--loss); display:none; font-size:12px; margin-top:10px;">Access Denied! Incorrect VIP Key.</p>
     </div>
   </div>
 
@@ -79,7 +79,7 @@
 
 <script>
 const PASS = "Soikat2580";
-// 1-Minute API URL updated
+// ১ মিনিটের জন্য API আপডেট করা হয়েছে
 const LIVE_API = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json";
 
 let bigDatabase = []; 
@@ -89,7 +89,10 @@ let winLossHistory = {};
 
 async function checkLogin() {
   const pass = document.getElementById('passInput').value;
+  const errorMsg = document.getElementById('error');
+  
   if(pass === PASS) {
+    errorMsg.style.display = 'none'; // পাসওয়ার্ড সঠিক হলে এরর মুছে যাবে
     document.getElementById('loginSection').style.display = 'none';
     document.getElementById('mainApp').style.display = 'block';
     
@@ -101,14 +104,106 @@ async function checkLogin() {
 
     startEngine();
   } else {
-    document.getElementById('error').style.display = 'block';
+    // ভুল পাসওয়ার্ড দিলে এখানে মেসেজ দেখাবে
+    errorMsg.style.display = 'block';
+    document.getElementById('passInput').value = ""; // ইনপুট ক্লিয়ার করে দিবে
   }
 }
 
 function startEngine() {
   fetchLive();
-  // Fetch live results every 5 seconds for stability
-  setInterval(fetchLive, 5000);
+  setInterval(fetchLive, 4000);
+  setInterval(() => { if(window.currentLiveHistory) runDeepScan(window.currentLiveHistory); }, 1000);
   
-  // Update prediction UI
+  // ১ মিনিটের টাইমার লজিক (৬০ সেকেন্ড)
+  setInterval(() => {
+    let r = 60 - (new Date().getSeconds() % 60);
+    document.getElementById('timer').innerText = r + "s";
+  }, 1000);
+}
+
+async function fetchLive() {
+  try {
+    const res = await fetch(`${LIVE_API}?t=${Date.now()}`);
+    const json = await res.json();
+    if(json.data && json.data.list) {
+      const history = json.data.list;
+      window.currentLiveHistory = history;
+      updateWinLossLogic(history[0]);
+    }
+  } catch (e) {}
+}
+
+function updateWinLossLogic(latestResult) {
+    const period = latestResult.issueNumber;
+    const actual = parseInt(latestResult.number) >= 5 ? "BIG" : "SMALL";
+
+    if (lastTargetPeriod === period && lastPrediction !== null) {
+        winLossHistory[period] = (lastPrediction === actual) ? "WIN" : "LOSS";
+        lastPrediction = null; 
+        lastTargetPeriod = null;
+    }
+}
+
+function runDeepScan(history) {
+  const latest = history[0];
+  const nextPeriod = (BigInt(latest.issueNumber) + 1n).toString();
+  document.getElementById('periodDisplay').innerText = nextPeriod.slice(-4);
+
+  const currentKey = history.slice(0, 5).map(x => parseInt(x.number) >= 5 ? 'B' : 'S').join('');
+  let bCount = 0, sCount = 0, matchCount = 0;
+  
+  if(bigDatabase.length > 0) {
+    for (let i = 0; i < bigDatabase.length - 6; i++) {
+      let pKey = "";
+      for(let j=0; j<5; j++) {
+        pKey += parseInt(bigDatabase[i+j+1].number) >= 5 ? 'B' : 'S';
+      }
+      if(pKey === currentKey) {
+        matchCount++;
+        if(parseInt(bigDatabase[i].number) >= 5) bCount++; else sCount++;
+      }
+    }
+  }
+
+  let pred = "WAIT";
+  let conf = 0;
+
+  if (matchCount > 0) {
+    if (bCount > sCount) { pred = "BIG"; conf = (bCount/matchCount)*100; }
+    else if (sCount > bCount) { pred = "SMALL"; conf = (sCount/matchCount)*100; }
     
+    if (lastTargetPeriod !== nextPeriod) {
+        lastPrediction = pred;
+        lastTargetPeriod = nextPeriod;
+    }
+  }
+
+  const pDiv = document.getElementById('prediction');
+  pDiv.innerText = pred;
+  pDiv.style.color = pred === "BIG" ? "#ff9900" : (pred === "SMALL" ? "#00aaff" : "#00ffea");
+  document.getElementById('confPercent').innerText = Math.round(conf) + "%";
+  document.getElementById('matchFound').innerText = matchCount;
+  
+  renderTable(history);
+}
+
+function renderTable(history) {
+  let html = "";
+  history.slice(0, 10).forEach(item => {
+    const isB = parseInt(item.number) >= 5;
+    const status = winLossHistory[item.issueNumber] || "---";
+    const statusClass = status === "WIN" ? "green" : (status === "LOSS" ? "red" : "");
+    html += `<tr>
+      <td>${item.issueNumber.slice(-4)}</td>
+      <td class="gold">${item.number}</td>
+      <td class="${isB ? 'red' : 'green'}">${isB ? 'BIG' : 'SMALL'}</td>
+      <td class="${statusClass}">${status}</td>
+    </tr>`;
+  });
+  document.getElementById('logTable').innerHTML = html;
+}
+</script>
+</body>
+</html>
+
