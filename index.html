@@ -3,171 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Market Pattern Predictor</title>
+    <title>AI Predictor - Win/Loss Tracker</title>
     <style>
-        :root {
-            --bg-color: #0d1117;
-            --card-bg: #161b22;
-            --text-main: #c9d1d9;
-            --accent: #58a6ff;
-            --green: #238636;
-            --red: #da3633;
-            --violet: #8957e5;
-        }
-
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 450px;
-            text-align: center;
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid #30363d;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .header {
-            font-size: 1.2rem;
-            color: var(--accent);
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .issue-box {
-            font-size: 0.9rem;
-            background: #21262d;
-            padding: 8px 15px;
-            border-radius: 50px;
-            display: inline-block;
-            margin-bottom: 20px;
-            border: 1px solid #30363d;
-        }
-
-        .prediction-label {
-            font-size: 1rem;
-            margin-bottom: 10px;
-            opacity: 0.8;
-        }
-
-        .prediction-value {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin: 10px 0;
-            transition: all 0.5s ease;
-        }
-
-        .details {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 1px solid #30363d;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            display: block;
-            margin-bottom: 5px;
-            color: #8b949e;
-        }
-
-        .stat-value {
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        /* Dynamic Colors */
-        .color-green { color: var(--green); text-shadow: 0 0 20px rgba(35, 134, 54, 0.4); }
-        .color-red { color: var(--red); text-shadow: 0 0 20px rgba(218, 54, 51, 0.4); }
-        .color-violet { color: var(--violet); text-shadow: 0 0 20px rgba(137, 87, 229, 0.4); }
-        .color-default { color: var(--text-main); }
-
-        .loader {
-            font-size: 12px;
-            margin-top: 20px;
-            color: #484f58;
-        }
+        :root { --bg: #09090b; --card: #18181b; --primary: #3b82f6; --text: #fafafa; --win: #22c55e; --loss: #ef4444; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { width: 95%; max-width: 400px; background: var(--card); padding: 25px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #27272a; text-align: center; }
+        .header { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: #71717a; margin-bottom: 15px; }
+        .status-badge { font-size: 12px; padding: 5px 15px; border-radius: 50px; font-weight: bold; margin-bottom: 10px; display: inline-block; }
+        .win-bg { background: rgba(34, 197, 94, 0.2); color: var(--win); border: 1px solid var(--win); }
+        .loss-bg { background: rgba(239, 68, 68, 0.2); color: var(--loss); border: 1px solid var(--loss); }
+        .result-box { margin: 25px 0; padding: 20px; background: #27272a; border-radius: 15px; }
+        .predict-val { font-size: 55px; font-weight: 900; line-height: 1; }
+        .predict-color { font-size: 16px; font-weight: bold; text-transform: uppercase; margin-top: 5px; }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .stat-card { background: #1c1c1f; padding: 10px; border-radius: 12px; }
+        .stat-v { display: block; font-size: 18px; font-weight: bold; }
+        .stat-l { font-size: 11px; color: #71717a; }
+        .green { color: var(--win); } .red { color: var(--loss); } .violet { color: #a855f7; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="card">
-        <div class="header">AI Pattern Analysis</div>
-        <div class="issue-box" id="sync-issue">Syncing Data...</div>
-        
-        <div class="prediction-label">পরবর্তী সম্ভাব্য ফলাফল</div>
-        <div id="prediction-box" class="prediction-value color-default">--</div>
-        
-        <div class="details">
-            <div class="stat-item">
-                <span class="stat-label">একুরেসি</span>
-                <span class="stat-value" id="confidence">0%</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">হিস্ট্রি মিল</span>
-                <span class="stat-value" id="history-count">0 বার</span>
-            </div>
-        </div>
+    <div class="header">AI Market Intelligence</div>
+    
+    <div id="win-loss-status" class="status-badge" style="display:none;">বিশ্লেষণ চলছে...</div>
 
-        <div class="loader">
-            স্ট্যাটাস: <span id="status">লাইভ ট্র্যাকিং সচল</span>
-        </div>
+    <div class="result-box">
+        <div class="stat-l">পরবর্তী টার্গেট (Next Prediction)</div>
+        <div id="p-num" class="predict-val">--</div>
+        <div id="p-col" class="predict-color">অপেক্ষা করুন</div>
     </div>
+
+    <div class="stats">
+        <div class="stat-card"><span class="stat-v" id="last-result">--</span><span class="stat-l">আগের ফলাফল</span></div>
+        <div class="stat-card"><span class="stat-v" id="p-acc">0%</span><span class="stat-l">নিশ্চয়তা</span></div>
+        <div class="stat-card"><span class="stat-v" id="p-match">0</span><span class="stat-l">ইতিহাসে মিল</span></div>
+        <div class="stat-card"><span class="stat-v" id="sync-issue">--</span><span class="stat-l">বর্তমান ইস্যু</span></div>
+    </div>
+
+    <div style="margin-top:20px; font-size:10px; color:#52525b;" id="time-sync">Syncing with data.json...</div>
 </div>
 
 <script>
-    async function updateDashboard() {
+    let lastStoredPrediction = null; // আগের প্রেডিকশন মনে রাখার জন্য
+
+    async function runEngine() {
         try {
-            // পাইথনের জেনারেট করা রেজাল্ট ফাইল থেকে ডেটা নিচ্ছে
-            const response = await fetch('live_result.json?t=' + new Date().getTime());
+            const response = await fetch('data.json?t=' + Date.now());
             const data = await response.json();
-
-            // ইস্যু আপডেট
-            document.getElementById('sync-issue').innerText = "ইস্যু: " + data.sync_issue;
             
-            // প্রেডিকশন এবং কালার আপডেট
-            const predBox = document.getElementById('prediction-box');
-            const colorClass = data.color.toLowerCase();
-            
-            predBox.innerText = data.color + " (" + data.prediction + ")";
-            predBox.className = "prediction-value color-" + colorClass;
+            if (data.length < 11) return;
 
-            // স্ট্যাটাস আপডেট
-            document.getElementById('confidence').innerText = data.confidence;
-            document.getElementById('history-count').innerText = data.history_matches + " বার";
-            
-            document.getElementById('status').innerText = "ডেটা সিঙ্ক হয়েছে: " + new Date().toLocaleTimeString();
+            const latestEntry = data[data.length - 1];
+            const lookback = 10;
+            const currentPattern = data.slice(-lookback);
 
-        } catch (error) {
-            document.getElementById('status').innerText = "নতুন ডেটার জন্য অপেক্ষা করা হচ্ছে...";
-        }
+            // --- Win/Loss Logic ---
+            if (lastStoredPrediction) {
+                const statusElement = document.getElementById('win-loss-status');
+                statusElement.style.display = 'inline-block';
+                
+                // আগের প্রেডিকশনের সাথে বর্তমান অরিজিনাল রেজাল্ট মিলানো হচ্ছে
+                if (latestEntry.number == lastStoredPrediction.number) {
+                    statusElement.innerText = "🔥 WIN - চমৎকার প্রেডিকশন!";
+                    statusElement.className = "status-badge win-bg";
+                } else {
+                    statusElement.innerText = "❌ LOSS - প্যাটার্ন পরিবর্তন হয়েছে";
+                    statusElement.className = "status-badge loss-bg";
+                }
+                document.getElementById('last-result').innerText = latestEntry.color + " (" + latestEntry.number + ")";
+            }
+
+            // --- Next Prediction Engine ---
+            let matches = [];
+            for (let i = 0; i < data.length - lookback - 1; i++) {
+                let match = true;
+                for (let j = 0; j < lookback; j++) {
+                    if (data[i+j].number !== currentPattern[j].number || 
+                        data[i+j].color !== currentPattern[j].color) {
+                        match = false; break;
+                    }
+                }
+                if (match) matches.push(data[i + lookback]);
+            }
+
+            if (matches.length > 0) {
+                const counts = matches.reduce((acc, curr) => {
+                    const key = `${curr.color}|${curr.number}`;
+                    acc[key] = (acc[key] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const top = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+                const [color, number] = top.split('|');
+
+                // UI আপডেট
+                document.getElementById('p-num').innerText = number;
+                document.getElementById('p-num').className = "predict-val " + color.toLowerCase();
+                document.getElementById('p-col').innerText = color;
+                document.getElementById('p-acc').innerText = ((counts[top]/matches.length)*100).toFixed(1) + "%";
+                document.getElementById('p-match').innerText = matches.length;
+                document.getElementById('sync-issue').innerText = latestEntry.issueNumber.toString().slice(-4);
+
+                // নতুন প্রেডিকশনটি সেভ করে রাখা হচ্ছে পরের বার চেক করার জন্য
+                lastStoredPrediction = { number: number, color: color };
+            }
+
+            document.getElementById('time-sync').innerText = "Last Sync: " + new Date().toLocaleTimeString();
+
+        } catch (e) { console.log("Updating data..."); }
     }
 
-    // প্রতি ৩ সেকেন্ড পর পর আপডেট চেক করবে
-    setInterval(updateDashboard, 3000);
-    updateDashboard();
+    // প্রতি ১০ সেকেন্ডে চেক করবে (যাতে ডেটা আসার সাথে সাথে রেজাল্ট দিতে পারে)
+    setInterval(runEngine, 10000);
+    runEngine();
 </script>
-
 </body>
 </html>
