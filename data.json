@@ -1,5 +1,12 @@
 [
   {
+    "issueNumber": "20260407100010357",
+    "number": "1",
+    "color": "green",
+    "premium": "1",
+    "sum": 0
+  },
+  {
     "issueNumber": "20260407100010356",
     "number": "2",
     "color": "red",
@@ -60,41 +67,6 @@
     "number": "2",
     "color": "red",
     "premium": "2",
-    "sum": 0
-  },
-  {
-    "issueNumber": "20260407100010347",
-    "number": "1",
-    "color": "green",
-    "premium": "1",
-    "sum": 0
-  },
-  {
-    "issueNumber": "20260407100010346",
-    "number": "4",
-    "color": "red",
-    "premium": "4",
-    "sum": 0
-  },
-  {
-    "issueNumber": "20260407100010345",
-    "number": "6",
-    "color": "red",
-    "premium": "6",
-    "sum": 0
-  },
-  {
-    "issueNumber": "20260407100010344",
-    "number": "7",
-    "color": "green",
-    "premium": "7",
-    "sum": 0
-  },
-  {
-    "issueNumber": "20260407100010343",
-    "number": "1",
-    "color": "green",
-    "premium": "1",
     "sum": 0
   }
 ]
