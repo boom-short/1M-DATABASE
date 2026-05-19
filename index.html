@@ -3,158 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>APAE v2.0 - NEURAL ANALYSIS</title>
+    <title>WinGo 1M AI-Ready Full Table</title>
     <style>
-        /* প্রফেশনাল নিউরাল ডিজাইন */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #030508; color: #e6edf3; font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 15px; 
+            background-color: #f4f4f9; 
+            color: #333; 
+        }
+        h2 { 
+            color: #2c3e50; 
+            margin-bottom: 5px; 
+        }
         
-        .ana-card { width: 100%; max-width: 400px; background: linear-gradient(165deg, #0d1117 0%, #161b22 100%); border: 1px solid #30363d; border-radius: 20px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.7); text-align: center; margin-bottom: 25px; position: relative; overflow: hidden; }
-        .ana-card::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #58a6ff, transparent); animation: scan 3s linear infinite; }
-        @keyframes scan { 0% { left: -100%; } 100% { left: 100%; } }
+        /* AI এর সহজে বোঝার জন্য গণনার কাউন্টার বক্স */
+        .counter-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .counter-box {
+            background: #fff;
+            padding: 10px 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid #2980b9;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .counter-box.filled { border-left-color: #27ae60; color: #27ae60; }
+        .counter-box.blank { border-left-color: #7f8c8d; color: #7f8c8d; }
 
-        .system-status { font-size: 10px; color: #3fb950; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        .dot { width: 6px; height: 6px; background: #3fb950; border-radius: 50%; box-shadow: 0 0 10px #3fb950; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
-
-        .target-label { color: #8b949e; font-size: 13px; margin-bottom: 5px; }
-        #target-period { font-size: 26px; color: #58a6ff; font-weight: 800; display: block; letter-spacing: 1px; }
-
-        #prediction-text { font-size: 70px; font-weight: 900; margin: 20px 0; display: block; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .table-container { 
+            max-height: 85vh; 
+            overflow-y: auto;  
+            border: 1px solid #ddd; 
+            background: #fff; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+        }
+        th, td { 
+            padding: 8px 10px; 
+            text-align: center; 
+            border-bottom: 1px solid #ddd; 
+            border-right: 1px solid #eee;
+            font-size: 13px; 
+        }
+        th { 
+            background-color: #34495e; 
+            color: white; 
+            position: sticky; 
+            top: 0; 
+            z-index: 1; 
+        }
         
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #30363d; padding-top: 15px; margin-top: 10px; }
-        .stat-box { display: flex; flex-direction: column; font-size: 12px; }
-        .stat-box span:first-child { color: #8b949e; margin-bottom: 3px; }
-        .stat-box span:last-child { color: #3fb950; font-weight: bold; }
-
-        .history-list { width: 100%; max-width: 400px; background: #0d1117; border-radius: 15px; border: 1px solid #21262d; overflow: hidden; }
-        .history-header { background: #161b22; padding: 12px 15px; font-size: 12px; font-weight: bold; color: #8b949e; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; }
-        .data-row { display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid #21262d; align-items: center; transition: background 0.2s; }
-        .data-row:last-child { border-bottom: none; }
-        .data-row:hover { background: #1c2128; }
-        .period-small { color: #8b949e; font-size: 13px; }
-        .num-bold { color: #58a6ff; font-weight: bold; font-size: 16px; }
+        .badge { 
+            padding: 3px 8px; 
+            border-radius: 10px; 
+            font-weight: bold; 
+            color: white; 
+            display: inline-block; 
+            text-transform: capitalize; 
+            font-size: 11px;
+        }
+        .color-green { background-color: #27ae60; }
+        .color-red { background-color: #c0392b; }
+        .color-violet { background-color: #8e44ad; }
+        .color-red-violet { background: linear-gradient(135deg, #c0392b 50%, #8e44ad 50%); }
+        .color-green-violet { background: linear-gradient(135deg, #27ae60 50%, #8e44ad 50%); }
+        
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        
+        /* ফাঁকা ঘরের জন্য নির্দিষ্ট হালকা বর্ডার ও স্টাইল */
+        .blank-row { background-color: #ffffff; }
+        .blank-cell { color: #ccc; font-style: italic; font-size: 11px; }
     </style>
 </head>
 <body>
 
-    <div class="ana-card">
-        <div class="system-status">
-            <div class="dot"></div> ANA AUTONOMOUS ACTIVE
-        </div>
-        
-        <div class="target-label">NEXT PREDICTION FOR</div>
-        <span id="target-period">SYNCING...</span>
-
-        <span id="prediction-text">WAIT...</span>
-
-        <div class="stats-grid">
-            <div class="stat-box">
-                <span>ACCURACY</span>
-                <span id="accuracy-val">00.00%</span>
-            </div>
-            <div class="stat-box">
-                <span>NEURAL FLOW</span>
-                <span id="flow-id">STABLE</span>
-            </div>
-        </div>
+    <h2>WinGo 1M ডাটা অ্যানালাইসিস টেবিল (AI-এর জন্য প্রস্তুত)</h2>
+    
+    <!-- AI রিডিং কাউন্টার বক্স -->
+    <div class="counter-container">
+        <div class="counter-box filled" id="filledCount">ইনপুট ডাটা: গণনা করা হচ্ছে...</div>
+        <div class="counter-box blank" id="blankCount">ফাঁকা ঘর: গণনা করা হচ্ছে...</div>
+        <div class="counter-box" id="totalCount">সর্বমোট ঘর: ৫০,০০০</div>
     </div>
 
-    <div class="history-list">
-        <div class="history-header">
-            <span>PERIOD</span>
-            <span>NUMBER</span>
-            <span>RESULT</span>
-        </div>
-        <div id="data-stream"></div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>সিরিয়াল</th>
+                    <th>ইস্যু নাম্বার (Issue No)</th>
+                    <th>নাম্বার (Number)</th>
+                    <th>কালার (Color)</th>
+                    <th>প্রিমিয়াম (Premium)</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- এখানে একবারে পুরো ৫০০০০ ঘর লোড হবে -->
+            </tbody>
+        </table>
     </div>
 
     <script>
-        let lastPeriod = "";
+        const DATA_JSON_URL = "data.json"; 
+        const MAX_TOTAL_ROWS = 50000; 
 
-        async function fetchEngine() {
+        async function loadJsonData() {
             try {
-                // ক্যাশ পুরোপুরি বন্ধ করার জন্য শক্তিশালী ব্যবস্থা
-                const response = await fetch('data.json?v=' + Date.now(), {
-                    cache: 'no-store',
-                    headers: {
-                        'Cache-Control': 'no-cache',
-                        'Pragma': 'no-cache'
-                    }
-                });
+                const response = await fetch(DATA_JSON_URL + "?t=" + new Date().getTime());
+                const dataStorage = await response.json();
                 
-                const data = await response.json();
-                if (!data || data.length === 0) return;
+                // গণনা বা কাউন্টিং হিসেব করা
+                const filledRowsCount = dataStorage.length;
+                const blankRowsCount = Math.max(0, MAX_TOTAL_ROWS - filledRowsCount);
+                
+                // ওপরে কাউন্টারে ডাটা বসানো
+                document.getElementById('filledCount').innerText = `ইনপুট ডাটা (ভরা ঘর): ${filledRowsCount.toLocaleString()} টি`;
+                document.getElementById('blankCount').innerText = `ফাঁকা ঘর: ${blankRowsCount.toLocaleString()} টি`;
 
-                const currentIssue = data[0].issueNumber;
+                // পুরো ৫০০০০ ঘর একসাথে তৈরি করা (যাতে AI সব দেখতে পারে)
+                generateAllRows(dataStorage);
 
-                // পিরিয়ড চেঞ্জ হলেই কেবল নতুন প্রেডিকশন হবে (বারবার বদলাবে না)
-                if (currentIssue !== lastPeriod) {
-                    lastPeriod = currentIssue;
-                    runAnalysis(data);
-                }
-
-            } catch (err) {
-                console.log("Searching Data...");
+            } catch (error) {
+                console.error("ফাইল রিড করতে সমস্যা:", error);
+                document.getElementById('filledCount').innerText = `ইনপুট ডাটা: ০ টি`;
+                document.getElementById('blankCount').innerText = `ফাঁকা ঘর: ৫০,০০০ টি`;
+                generateAllRows([]); // ফাইল না থাকলেও খালি ৫০০০০ ঘর একবারে তৈরি হবে
             }
         }
 
-        function runAnalysis(data) {
-            const last = data[0];
-            const nextIssue = (BigInt(last.issueNumber) + 1n).toString();
+        function generateAllRows(dataStorage) {
+            const tableBody = document.getElementById('tableBody');
+            const fragment = document.createDocumentFragment(); // একবারে দ্রুত রেন্ডার করার জন্য ব্রাউজার অপ্টিমাইজেশন
+
+            for (let i = 0; i < MAX_TOTAL_ROWS; i++) {
+                const row = document.createElement('tr');
+                const serialNumber = i + 1; // সোজা সিরিয়াল ১, ২, ৩, ৪...
+                const item = dataStorage[i]; 
+
+                if (item) {
+                    // ডাটা থাকলে নির্দিষ্ট কোটে আলাদা আলাদা বসবে (নতুন ডাটা উপরে)
+                    let colorClass = 'color-' + (item.color ? item.color.trim() : 'faded');
+                    if (item.color && item.color.includes('red') && item.color.includes('violet')) colorClass = 'color-red-violet';
+                    if (item.color && item.color.includes('green') && item.color.includes('violet')) colorClass = 'color-green-violet';
+
+                    row.innerHTML = `
+                        <td><strong>${serialNumber}</strong></td>
+                        <td>${item.issueNumber || ''}</td>
+                        <td>${item.number !== undefined ? item.number : ''}</td>
+                        <td><span class="badge ${colorClass}">${item.color || ''}</span></td>
+                        <td>${item.premium || ''}</td>
+                    `;
+                } else {
+                    // ডাটা না থাকলে ঘর সম্পূর্ণ ফাঁকা দেখাবে এবং AI এর চেনার জন্য "blank-cell" মার্ক করা থাকবে
+                    row.className = "blank-row";
+                    row.innerHTML = `
+                        <td><span style="color: #bdc3c7;">${serialNumber}</span></td>
+                        <td class="blank-cell">[ফাঁকা]</td>
+                        <td class="blank-cell">[ফাঁকা]</td>
+                        <td class="blank-cell">[ফাঁকা]</td>
+                        <td class="blank-cell">[ফাঁকা]</td>
+                    `;
+                }
+                fragment.appendChild(row);
+            }
             
-            // UI আপডেট
-            document.getElementById('target-period').innerText = nextIssue;
-
-            // --- অটোনোমাস স্ট্যাবল লজিক ---
-            // এটি গত ১০টি ডাটার ট্রেন্ড বিশ্লেষণ করে একটি ফিক্সড প্রেডিকশন দেবে
-            const pattern = data.slice(0, 10).map(d => parseInt(d.number));
-            const patternSum = pattern.reduce((a, b) => a + b, 0);
-            
-            // একটি স্থির গাণিতিক প্যাটার্ন (Deterministic)
-            // পিরিয়ডের শেষ সংখ্যার সাথে ডাটার যোগফল মিলিয়ে ডিসিশন (এটি কখনো র‍্যান্ডমলি বদলাবে না)
-            const baseFactor = (patternSum + parseInt(last.number)) % 10;
-            
-            let result = (baseFactor >= 5) ? "BIG" : "SMALL";
-            let accuracy = (89 + (baseFactor / 2)).toFixed(2) + "%";
-
-            // প্রেডিকশন আউটপুট
-            const display = document.getElementById('prediction-text');
-            display.innerText = result;
-            display.style.color = (result === "BIG") ? "#00ffcc" : "#ff3366";
-            display.style.transform = "scale(1.1)";
-            setTimeout(() => display.style.transform = "scale(1)", 400);
-
-            document.getElementById('accuracy-val').innerText = accuracy;
-            document.getElementById('flow-id').innerText = "V." + (baseFactor + 10);
-
-            // হিস্টোরি টেবিল আপডেট
-            renderHistory(data);
+            tableBody.appendChild(fragment); // পুরো ৫০০০০ ঘর টেবিলে পুশ করা হলো
         }
 
-        function renderHistory(data) {
-            const stream = document.getElementById('data-stream');
-            stream.innerHTML = data.slice(0, 6).map(item => `
-                <div class="data-row">
-                    <span class="period-small">${item.issueNumber.slice(-4)}</span>
-                    <span class="num-bold">${item.number}</span>
-                    <span style="color:${getColor(item.color)}; font-weight:bold; font-size:12px;">
-                        ${item.color.toUpperCase()}
-                    </span>
-                </div>
-            `).join('');
-        }
-
-        function getColor(c) {
-            if (c.includes('green')) return '#3fb950';
-            if (c.includes('red')) return '#f85149';
-            if (c.includes('violet')) return '#a371f7';
-            return '#fff';
-        }
-
-        // প্রতি ১ সেকেন্ডে চেক করবে (খুবই দ্রুত রেসপন্স)
-        setInterval(fetchEngine, 10);
-        fetchEngine();
+        // পেজ ওপেন হওয়ামাত্র রান হবে
+        loadJsonData();
     </script>
 </body>
 </html>
