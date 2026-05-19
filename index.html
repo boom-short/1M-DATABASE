@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WinGo 1M AI-Ready Full Table</title>
+    <title>WinGo 1M AI-Ready Ultra Fast Table</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -16,7 +16,6 @@
             margin-bottom: 5px; 
         }
         
-        /* AI এর সহজে বোঝার জন্য গণনার কাউন্টার বক্স */
         .counter-container {
             display: flex;
             gap: 15px;
@@ -40,6 +39,7 @@
             border: 1px solid #ddd; 
             background: #fff; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            contain: content; /* ব্রাউজার রেন্ডারিং স্পীড বাড়ানোর জন্য */
         }
         table { 
             width: 100%; 
@@ -75,10 +75,8 @@
         .color-red-violet { background: linear-gradient(135deg, #c0392b 50%, #8e44ad 50%); }
         .color-green-violet { background: linear-gradient(135deg, #27ae60 50%, #8e44ad 50%); }
         
+        tr { height: 37px; } /* প্রতিটি রো এর হাইট ফিক্সড রাখলে ব্রাউজার দ্রুত কাজ করে */
         tr:nth-child(even) { background-color: #f9f9f9; }
-        
-        /* ফাঁকা ঘরের জন্য নির্দিষ্ট হালকা বর্ডার ও স্টাইল */
-        .blank-row { background-color: #ffffff; }
         .blank-cell { color: #ccc; font-style: italic; font-size: 11px; }
     </style>
 </head>
@@ -86,10 +84,9 @@
 
     <h2>WinGo 1M ডাটা অ্যানালাইসিস টেবিল (AI-এর জন্য প্রস্তুত)</h2>
     
-    <!-- AI রিডিং কাউন্টার বক্স -->
     <div class="counter-container">
-        <div class="counter-box filled" id="filledCount">ইনপুট ডাটা: গণনা করা হচ্ছে...</div>
-        <div class="counter-box blank" id="blankCount">ফাঁকা ঘর: গণনা করা হচ্ছে...</div>
+        <div class="counter-box filled" id="filledCount">ইনপুট ডাটা: লোড হচ্ছে...</div>
+        <div class="counter-box blank" id="blankCount">ফাঁকা ঘর: লোড হচ্ছে...</div>
         <div class="counter-box" id="totalCount">সর্বমোট ঘর: ৫০,০০০</div>
     </div>
 
@@ -104,9 +101,7 @@
                     <th>প্রিমিয়াম (Premium)</th>
                 </tr>
             </thead>
-            <tbody id="tableBody">
-                <!-- এখানে একবারে পুরো ৫০০০০ ঘর লোড হবে -->
-            </tbody>
+            <tbody id="tableBody"></tbody>
         </table>
     </div>
 
@@ -119,66 +114,111 @@
                 const response = await fetch(DATA_JSON_URL + "?t=" + new Date().getTime());
                 const dataStorage = await response.json();
                 
-                // গণনা বা কাউন্টিং হিসেব করা
                 const filledRowsCount = dataStorage.length;
                 const blankRowsCount = Math.max(0, MAX_TOTAL_ROWS - filledRowsCount);
                 
-                // ওপরে কাউন্টারে ডাটা বসানো
                 document.getElementById('filledCount').innerText = `ইনপুট ডাটা (ভরা ঘর): ${filledRowsCount.toLocaleString()} টি`;
                 document.getElementById('blankCount').innerText = `ফাঁকা ঘর: ${blankRowsCount.toLocaleString()} টি`;
 
-                // পুরো ৫০০০০ ঘর একসাথে তৈরি করা (যাতে AI সব দেখতে পারে)
-                generateAllRows(dataStorage);
+                // সুপার-ফাস্ট রেন্ডারিং শুরু
+                generateRowsFast(dataStorage);
 
             } catch (error) {
                 console.error("ফাইল রিড করতে সমস্যা:", error);
                 document.getElementById('filledCount').innerText = `ইনপুট ডাটা: ০ টি`;
                 document.getElementById('blankCount').innerText = `ফাঁকা ঘর: ৫০,০০০ টি`;
-                generateAllRows([]); // ফাইল না থাকলেও খালি ৫০০০০ ঘর একবারে তৈরি হবে
+                generateRowsFast([]); 
             }
         }
 
-        function generateAllRows(dataStorage) {
+        function generateRowsFast(dataStorage) {
             const tableBody = document.getElementById('tableBody');
-            const fragment = document.createDocumentFragment(); // একবারে দ্রুত রেন্ডার করার জন্য ব্রাউজার অপ্টিমাইজেশন
+            const totalDataLength = dataStorage.length;
 
-            for (let i = 0; i < MAX_TOTAL_ROWS; i++) {
-                const row = document.createElement('tr');
-                const serialNumber = i + 1; // সোজা সিরিয়াল ১, ২, ৩, ৪...
-                const item = dataStorage[i]; 
+            // পার্ট ১: আপনার মেইন ডাটা (ভরা ঘরগুলো) চোখের পলকে সাথে সাথে রেন্ডার হবে
+            let htmlChunk = "";
+            const initialLimit = Math.min(MAX_TOTAL_ROWS, Math.max(totalDataLength, 200)); 
+
+            for (let i = 0; i < initialLimit; i++) {
+                const serialNumber = i + 1;
+                const item = dataStorage[i];
 
                 if (item) {
-                    // ডাটা থাকলে নির্দিষ্ট কোটে আলাদা আলাদা বসবে (নতুন ডাটা উপরে)
                     let colorClass = 'color-' + (item.color ? item.color.trim() : 'faded');
                     if (item.color && item.color.includes('red') && item.color.includes('violet')) colorClass = 'color-red-violet';
                     if (item.color && item.color.includes('green') && item.color.includes('violet')) colorClass = 'color-green-violet';
 
-                    row.innerHTML = `
-                        <td><strong>${serialNumber}</strong></td>
-                        <td>${item.issueNumber || ''}</td>
-                        <td>${item.number !== undefined ? item.number : ''}</td>
-                        <td><span class="badge ${colorClass}">${item.color || ''}</span></td>
-                        <td>${item.premium || ''}</td>
+                    htmlChunk += `
+                        <tr>
+                            <td><strong>${serialNumber}</strong></td>
+                            <td>${item.issueNumber || ''}</td>
+                            <td>${item.number !== undefined ? item.number : ''}</td>
+                            <td><span class="badge ${colorClass}">${item.color || ''}</span></td>
+                            <td>${item.premium || ''}</td>
+                        </tr>
                     `;
                 } else {
-                    // ডাটা না থাকলে ঘর সম্পূর্ণ ফাঁকা দেখাবে এবং AI এর চেনার জন্য "blank-cell" মার্ক করা থাকবে
-                    row.className = "blank-row";
-                    row.innerHTML = `
-                        <td><span style="color: #bdc3c7;">${serialNumber}</span></td>
-                        <td class="blank-cell">[ফাঁকা]</td>
-                        <td class="blank-cell">[ফাঁকা]</td>
-                        <td class="blank-cell">[ফাঁকা]</td>
-                        <td class="blank-cell">[ফাঁকা]</td>
+                    htmlChunk += `
+                        <tr class="blank-row">
+                            <td><span style="color: #bdc3c7;">${serialNumber}</span></td>
+                            <td class="blank-cell">[ফাঁকা]</td>
+                            <td class="blank-cell">[ফাঁকা]</td>
+                            <td class="blank-cell">[ফাঁকা]</td>
+                            <td class="blank-cell">[ফাঁকা]</td>
+                        </tr>
                     `;
                 }
-                fragment.appendChild(row);
             }
             
-            tableBody.appendChild(fragment); // পুরো ৫০০০০ ঘর টেবিলে পুশ করা হলো
+            // প্রথম অংশটি সাথে সাথে স্ক্রিনে পুশ করে দেওয়া হলো (১ সেকেন্ডেরও কম সময় নিবে)
+            requestAnimationFrame(() => {
+                tableBody.innerHTML = htmlChunk;
+                
+                // পার্ট ২: বাকি ফাঁকা ঘরগুলো ব্যাকগ্রাউন্ডে টুকরো টুকরো করে লোড হবে, যা আপনার ফোনকে ল্যাগ করবে না
+                if (initialLimit < MAX_TOTAL_ROWS) {
+                    setTimeout(() => {
+                        appendBlankRows(initialLimit + 1);
+                    }, 50);
+                }
+            });
         }
 
-        // পেজ ওপেন হওয়ামাত্র রান হবে
+        // ব্যাকগ্রাউন্ডে বাকি ফাঁকা ঘরগুলো ১০০০টি করে ধাপে ধাপে জোড়া দেওয়ার ফাংশন
+        function appendBlankRows(startSerial) {
+            const tableBody = document.getElementById('tableBody');
+            let chunk = "";
+            const chunkSize = 2000; // প্রতি ধাপে ২০০০টি করে ঘর ব্যাকগ্রাউন্ডে তৈরি হবে
+            const endLimit = Math.min(startSerial + chunkSize - 1, MAX_TOTAL_ROWS);
+
+            for (let i = startSerial; i <= endLimit; i++) {
+                chunk += `
+                    <tr class="blank-row">
+                        <td><span style="color: #bdc3c7;">${i}</span></td>
+                        <td class="blank-cell">[ফাঁকা]</td>
+                        <td class="blank-cell">[ফাঁকা]</td>
+                        <td class="blank-cell">[ফাঁকা]</td>
+                        <td class="blank-cell">[ফাঁকা]</td>
+                    </tr>
+                `;
+            }
+
+            const tempDiv = document.createElement('tbody');
+            tempDiv.innerHTML = chunk;
+            
+            while (tempDiv.firstChild) {
+                tableBody.appendChild(tempDiv.firstChild);
+            }
+
+            if (endLimit < MAX_TOTAL_ROWS) {
+                // পরের ২০০০ ঘরের জন্য আবার ব্যাকগ্রাউন্ড কল
+                setTimeout(() => {
+                    appendBlankRows(endLimit + 1);
+                }, 10);
+            }
+        }
+
         loadJsonData();
     </script>
 </body>
 </html>
+
