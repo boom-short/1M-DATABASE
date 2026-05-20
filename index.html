@@ -33,17 +33,32 @@
         .counter-box.filled { border-left-color: #27ae60; color: #27ae60; }
         .counter-box.blank { border-left-color: #7f8c8d; color: #7f8c8d; }
 
+        /* ভার্চুয়াল স্ক্রলিং কন্টেইনার */
         .table-container { 
-            max-height: 85vh; 
+            height: 75vh; 
             overflow-y: auto;  
             border: 1px solid #ddd; 
             background: #fff; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-            contain: content; /* ব্রাউজার রেন্ডারিং স্পীড বাড়ানোর জন্য */
+            position: relative;
         }
+        
+        /* সম্পূর্ণ ৫০,০০০ রো এর সমান উচ্চতা তৈরি করার জন্য ফেক স্ক্রলার */
+        .viewport-spacer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: -1;
+        }
+
         table { 
             width: 100%; 
             border-collapse: collapse; 
+            position: absolute;
+            top: 0;
+            left: 0;
+            will-change: transform;
         }
         th, td { 
             padding: 8px 10px; 
@@ -51,13 +66,14 @@
             border-bottom: 1px solid #ddd; 
             border-right: 1px solid #eee;
             font-size: 13px; 
+            box-sizing: border-box;
         }
         th { 
             background-color: #34495e; 
             color: white; 
             position: sticky; 
             top: 0; 
-            z-index: 1; 
+            z-index: 10; 
         }
         
         .badge { 
@@ -75,7 +91,7 @@
         .color-red-violet { background: linear-gradient(135deg, #c0392b 50%, #8e44ad 50%); }
         .color-green-violet { background: linear-gradient(135deg, #27ae60 50%, #8e44ad 50%); }
         
-        tr { height: 37px; } /* প্রতিটি রো এর হাইট ফিক্সড রাখলে ব্রাউজার দ্রুত কাজ করে */
+        tr { height: 38px; } /* ফিক্সড রো হাইট জরুরি */
         tr:nth-child(even) { background-color: #f9f9f9; }
         .blank-cell { color: #ccc; font-style: italic; font-size: 11px; }
     </style>
@@ -90,15 +106,16 @@
         <div class="counter-box" id="totalCount">সর্বমোট ঘর: ৫০,০০০</div>
     </div>
 
-    <div class="table-container">
+    <div class="table-container" id="tableContainer">
+        <div class="viewport-spacer" id="viewportSpacer"></div>
         <table>
             <thead>
                 <tr>
-                    <th>সিরিয়াল</th>
-                    <th>ইস্যু নাম্বার (Issue No)</th>
-                    <th>নাম্বার (Number)</th>
-                    <th>কালার (Color)</th>
-                    <th>প্রিমিয়াম (Premium)</th>
+                    <th style="width: 15%;">সিরিয়াল</th>
+                    <th style="width: 25%;">ইস্যু নাম্বার (Issue No)</th>
+                    <th style="width: 20%;">নাম্বার (Number)</th>
+                    <th style="width: 20%;">কালার (Color)</th>
+                    <th style="width: 20%;">প্রিমিয়াম (Premium)</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -108,40 +125,62 @@
     <script>
         const DATA_JSON_URL = "data.json"; 
         const MAX_TOTAL_ROWS = 50000; 
+        const ROW_HEIGHT = 38; // CSS-এর tr height এর সাথে মিল রাখা হয়েছে
+        const BUFFER_COUNT = 10; // স্ক্রিনের বাইরে এক্সট্রা কয়টি রো লোড থাকবে ক্যাশ হিসেবে
+
+        let globalDataStorage = [];
+        const tableContainer = document.getElementById('tableContainer');
+        const tableBody = document.getElementById('tableBody');
+        const viewportSpacer = document.getElementById('viewportSpacer');
+        const tableEl = tableContainer.querySelector('table');
+
+        // ফেক হাইট সেট করা যাতে স্ক্রলবার সঠিকভাবে কাজ করে
+        viewportSpacer.style.height = `${(MAX_TOTAL_ROWS * ROW_HEIGHT) + ROW_HEIGHT}px`;
 
         async function loadJsonData() {
             try {
                 const response = await fetch(DATA_JSON_URL + "?t=" + new Date().getTime());
-                const dataStorage = await response.json();
+                globalDataStorage = await response.json();
                 
-                const filledRowsCount = dataStorage.length;
+                const filledRowsCount = globalDataStorage.length;
                 const blankRowsCount = Math.max(0, MAX_TOTAL_ROWS - filledRowsCount);
                 
                 document.getElementById('filledCount').innerText = `ইনপুট ডাটা (ভরা ঘর): ${filledRowsCount.toLocaleString()} টি`;
                 document.getElementById('blankCount').innerText = `ফাঁকা ঘর: ${blankRowsCount.toLocaleString()} টি`;
 
-                // সুপার-ফাস্ট রেন্ডারিং শুরু
-                generateRowsFast(dataStorage);
+                // প্রথম রেন্ডার
+                renderVirtualTable();
 
             } catch (error) {
                 console.error("ফাইল রিড করতে সমস্যা:", error);
                 document.getElementById('filledCount').innerText = `ইনপুট ডাটা: ০ টি`;
                 document.getElementById('blankCount').innerText = `ফাঁকা ঘর: ৫০,০০০ টি`;
-                generateRowsFast([]); 
+                globalDataStorage = [];
+                renderVirtualTable();
             }
         }
 
-        function generateRowsFast(dataStorage) {
-            const tableBody = document.getElementById('tableBody');
-            const totalDataLength = dataStorage.length;
+        function renderVirtualTable() {
+            const scrollTop = tableContainer.scrollTop;
+            const containerHeight = tableContainer.clientHeight;
 
-            // পার্ট ১: আপনার মেইন ডাটা (ভরা ঘরগুলো) চোখের পলকে সাথে সাথে রেন্ডার হবে
+            // বর্তমানে স্ক্রিনে কোন ইনডেক্স থেকে কোন ইনডেক্স দেখা যাচ্ছে তা হিসাব করা
+            let startIndex = Math.floor(scrollTop / ROW_HEIGHT) - BUFFER_COUNT;
+            let endIndex = Math.ceil((scrollTop + containerHeight) / ROW_HEIGHT) + BUFFER_COUNT;
+
+            // বাউন্ডারি চেক
+            if (startIndex < 0) startIndex = 0;
+            if (endIndex >= MAX_TOTAL_ROWS) endIndex = MAX_TOTAL_ROWS - 1;
+
+            // টেবিলটিকে স্ক্রল পজিশন অনুযায়ী নিচে পুশ করার হিসাব (Thehead বাদ দিয়ে)
+            const offsetY = startIndex * ROW_HEIGHT;
+            tableEl.style.transform = `translateY(${offsetY}px)`;
+
             let htmlChunk = "";
-            const initialLimit = Math.min(MAX_TOTAL_ROWS, Math.max(totalDataLength, 200)); 
 
-            for (let i = 0; i < initialLimit; i++) {
+            for (let i = startIndex; i <= endIndex; i++) {
                 const serialNumber = i + 1;
-                const item = dataStorage[i];
+                const item = globalDataStorage[i];
 
                 if (item) {
                     let colorClass = 'color-' + (item.color ? item.color.trim() : 'faded');
@@ -150,72 +189,40 @@
 
                     htmlChunk += `
                         <tr>
-                            <td><strong>${serialNumber}</strong></td>
-                            <td>${item.issueNumber || ''}</td>
-                            <td>${item.number !== undefined ? item.number : ''}</td>
-                            <td><span class="badge ${colorClass}">${item.color || ''}</span></td>
-                            <td>${item.premium || ''}</td>
+                            <td style="width: 15%;"><strong>${serialNumber}</strong></td>
+                            <td style="width: 25%;">${item.issueNumber || ''}</td>
+                            <td style="width: 20%;">${item.number !== undefined ? item.number : ''}</td>
+                            <td style="width: 20%;"><span class="badge ${colorClass}">${item.color || ''}</span></td>
+                            <td style="width: 20%;">${item.premium || ''}</td>
                         </tr>
                     `;
                 } else {
                     htmlChunk += `
                         <tr class="blank-row">
-                            <td><span style="color: #bdc3c7;">${serialNumber}</span></td>
-                            <td class="blank-cell">[ফাঁকা]</td>
-                            <td class="blank-cell">[ফাঁকা]</td>
-                            <td class="blank-cell">[ফাঁকা]</td>
-                            <td class="blank-cell">[ফাঁকা]</td>
+                            <td style="width: 15%;"><span style="color: #bdc3c7;">${serialNumber}</span></td>
+                            <td class="blank-cell" style="width: 25%;">[ফাঁকা]</td>
+                            <td class="blank-cell" style="width: 20%;">[ফাঁকা]</td>
+                            <td class="blank-cell" style="width: 20%;">[ফাঁকা]</td>
+                            <td class="blank-cell" style="width: 20%;">[ফাঁকা]</td>
                         </tr>
                     `;
                 }
             }
-            
-            // প্রথম অংশটি সাথে সাথে স্ক্রিনে পুশ করে দেওয়া হলো (১ সেকেন্ডেরও কম সময় নিবে)
-            requestAnimationFrame(() => {
-                tableBody.innerHTML = htmlChunk;
-                
-                // পার্ট ২: বাকি ফাঁকা ঘরগুলো ব্যাকগ্রাউন্ডে টুকরো টুকরো করে লোড হবে, যা আপনার ফোনকে ল্যাগ করবে না
-                if (initialLimit < MAX_TOTAL_ROWS) {
-                    setTimeout(() => {
-                        appendBlankRows(initialLimit + 1);
-                    }, 50);
-                }
-            });
+
+            tableBody.innerHTML = htmlChunk;
         }
 
-        // ব্যাকগ্রাউন্ডে বাকি ফাঁকা ঘরগুলো ১০০০টি করে ধাপে ধাপে জোড়া দেওয়ার ফাংশন
-        function appendBlankRows(startSerial) {
-            const tableBody = document.getElementById('tableBody');
-            let chunk = "";
-            const chunkSize = 2000; // প্রতি ধাপে ২০০০টি করে ঘর ব্যাকগ্রাউন্ডে তৈরি হবে
-            const endLimit = Math.min(startSerial + chunkSize - 1, MAX_TOTAL_ROWS);
-
-            for (let i = startSerial; i <= endLimit; i++) {
-                chunk += `
-                    <tr class="blank-row">
-                        <td><span style="color: #bdc3c7;">${i}</span></td>
-                        <td class="blank-cell">[ফাঁকা]</td>
-                        <td class="blank-cell">[ফাঁকা]</td>
-                        <td class="blank-cell">[ফাঁকা]</td>
-                        <td class="blank-cell">[ফাঁকা]</td>
-                    </tr>
-                `;
+        // স্ক্রল করার সময় `requestAnimationFrame` ব্যবহার করে রেন্ডারিং স্মুথ রাখা
+        let ticking = false;
+        tableContainer.addEventListener('scroll', () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    renderVirtualTable();
+                    ticking = false;
+                });
+                ticking = true;
             }
-
-            const tempDiv = document.createElement('tbody');
-            tempDiv.innerHTML = chunk;
-            
-            while (tempDiv.firstChild) {
-                tableBody.appendChild(tempDiv.firstChild);
-            }
-
-            if (endLimit < MAX_TOTAL_ROWS) {
-                // পরের ২০০০ ঘরের জন্য আবার ব্যাকগ্রাউন্ড কল
-                setTimeout(() => {
-                    appendBlankRows(endLimit + 1);
-                }, 10);
-            }
-        }
+        });
 
         loadJsonData();
     </script>
